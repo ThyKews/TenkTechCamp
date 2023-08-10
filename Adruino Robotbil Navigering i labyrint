@@ -1,0 +1,106 @@
+#include <Servo.h>
+
+// Motorpinner
+int enA = 3; // Pin for venstre motor
+int enB = 6; // Pin for høyre motor
+int pinLB = 4; // Pin for venstre bakover
+int pinLF = 2; // Pin for venstre framover
+int pinRB = 7; // Pin for høyre bakover
+int pinRF = 5; // Pin for høyre framover
+
+// Ultrasonisk sensor og servo
+int inputPin = A0; // Pin for ultrasonisk sensor (Echo)
+int outputPin = A1; // Pin for ultrasonisk sensor (Trig)
+Servo myservo; // Servo for å rotere sensoren
+
+void setup() {
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(pinLB, OUTPUT);
+  pinMode(pinLF, OUTPUT);
+  pinMode(pinRB, OUTPUT);
+  pinMode(pinRF, OUTPUT);
+  pinMode(inputPin, INPUT);
+  pinMode(outputPin, OUTPUT);
+  myservo.attach(10); // Koble servoen til pin 10 (PWM)
+  
+  myservo.write(90); // Sett sensoren rett frem ved start
+}
+
+void loop() {
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  
+  // Mål avstand fra sensoren til en eventuell hindring
+  float distance = pulseIn(inputPin, HIGH) / 58.0; // Avstand i cm
+  
+  if (distance > 10) { // Hvis avstanden er større enn 10 cm, gå framover
+    move(100, 100); // Gå fremover med full fart
+  } else { // Hvis avstanden er mindre enn 10 cm, stopp og sving
+    move(0, 0); // Stopp
+    delay(500);
+    
+    // Sving sensoren til venstre for å måle avstand
+    myservo.write(20); // Roter sensoren til venstre
+    delay(500);
+    
+    // Mål avstand til venstre
+    float leftDistance = getDistance();
+    
+    // Roter sensoren tilbake til midten
+    myservo.write(90); // Sett sensoren tilbake i midten
+    
+    // Sving sensoren til høyre for å måle avstand
+    myservo.write(160); // Roter sensoren til høyre
+    delay(500);
+    
+    // Mål avstand til høyre
+    float rightDistance = getDistance();
+    
+    // Roter sensoren tilbake til midten
+    myservo.write(90); // Sett sensoren tilbake i midten
+    
+    // Velg retning basert på den minste avstanden
+    if (leftDistance > rightDistance) {
+      turnRight(); // Sving til høyre
+    } else {
+      turnLeft(); // Sving til venstre
+    }
+  }
+}
+
+// Funksjon for å måle avstand
+float getDistance() {
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  float distance = pulseIn(inputPin, HIGH) / 58.0; // Avstand i cm
+  return distance;
+}
+
+// Funksjon for å svinge til høyre
+void turnRight() {
+  move(60, 100); // Sving til høyre ved å justere hastighetene
+  delay(1000); // Sving i 1 sekund
+}
+
+// Funksjon for å svinge til venstre
+void turnLeft() {
+  move(100, 60); // Sving til venstre ved å justere hastighetene
+  delay(1000); // Sving i 1 sekund
+}
+
+// Funksjon for å styre motorer
+void move(int leftSpeed, int rightSpeed) {
+  digitalWrite(pinLB, leftSpeed < 0 ? HIGH : LOW);
+  digitalWrite(pinLF, leftSpeed > 0 ? HIGH : LOW);
+  digitalWrite(pinRB, rightSpeed < 0 ? HIGH : LOW);
+  digitalWrite(pinRF, rightSpeed > 0 ? HIGH : LOW);
+  analogWrite(enA, abs(leftSpeed));
+  analogWrite(enB, abs(rightSpeed));
+}
