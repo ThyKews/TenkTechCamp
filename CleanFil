@@ -1,0 +1,49 @@
+#include <Servo.h>
+
+// Motorpinner
+int enA = 3; // Pin for venstre motor
+int enB = 6; // Pin for høyre motor
+int pinLB = 4; // Pin for venstre bakover
+int pinLF = 2; // Pin for venstre framover
+int pinRB = 7; // Pin for høyre bakover
+int pinRF = 5; // Pin for høyre framover
+
+// Ultrasonisk sensor og servo
+int inputPin = A0; // Pin for ultrasonisk sensor (Echo)
+int outputPin = A1; // Pin for ultrasonisk sensor (Trig)
+Servo myservo; // Servo for å rotere sensoren
+
+void setup() {
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(pinLB, OUTPUT);
+  pinMode(pinLF, OUTPUT);
+  pinMode(pinRB, OUTPUT);
+  pinMode(pinRF, OUTPUT);
+  pinMode(inputPin, INPUT);
+  pinMode(outputPin, OUTPUT);
+  myservo.attach(10); // Koble servoen til pin 10 (PWM)
+  
+  myservo.write(90); // Sett sensoren rett frem ved start
+}
+
+void loop() {
+  stopMotors(); // Kall funksjonen for å stoppe motorene
+  resetServo(); // Kall funksjonen for å tilbakestille sensoren
+  delay(1000); // Vent i 1 sekund før neste reset
+}
+
+// Funksjon for å stoppe motorene
+void stopMotors() {
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, HIGH);
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, HIGH);
+  analogWrite(enA, 0);
+  analogWrite(enB, 0);
+}
+
+// Funksjon for å tilbakestille sensoren
+void resetServo() {
+  myservo.write(90); // Sett sensoren rett frem
+}
