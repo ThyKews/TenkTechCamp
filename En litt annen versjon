@@ -1,0 +1,196 @@
+#include <Servo.h>
+
+// Motor- og sensorkonfigurasjon
+int enA = 3; // Venstre motor
+int enB = 6; // Høyre motor
+int pinLB = 4; // Bakover venstre motor
+int pinLF = 2; // Framover venstre motor
+int pinRB = 7; // Bakover høyre motor
+int pinRF = 5; // Framover høyre motor
+
+int inputPin = A0; // Sensor pin (Echo)
+int outputPin = A1; // Sender pin (Trig)
+
+// Variabler for bevegelse og retning
+int Fspeedd = 0; // Framover hastighet
+int Rspeedd = 0; // Høyre hastighet
+int Lspeedd = 0; // Venstre hastighet
+int directionn = 0; // Hvilken vei bilen skal gå
+
+Servo myservo; // Ny servo
+int delay_time = 250; // Tid for stabilisering
+
+int Fgo = 8; // Framover
+int Rgo = 6; // Høyre sving
+int Lgo = 4; // Venstre sving
+int Bgo = 2; // Bakover
+
+void setup()
+{
+  Serial.begin(9600);
+  pinMode(pinLB, OUTPUT);
+  pinMode(pinLF, OUTPUT);
+  pinMode(pinRB, OUTPUT);
+  pinMode(pinRF, OUTPUT);
+  pinMode(inputPin, INPUT);
+  pinMode(outputPin, OUTPUT);
+  myservo.attach(10); // Servo-pin (PWM)
+}
+
+// Funksjon for å kjøre framover med en gitt tid
+void kjorFramover(int tid) {
+  digitalWrite(pinRB, LOW);
+  digitalWrite(pinRF, HIGH);
+  digitalWrite(pinLB, LOW);
+  digitalWrite(pinLF, HIGH);
+  delay(tid * 15);
+}
+
+// Funksjon for å svinge til høyre med en gitt tid
+void svingHoyre(int tid) {
+  digitalWrite(pinRB, LOW);
+  digitalWrite(pinRF, HIGH);
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, LOW);
+  delay(tid * 50);
+}
+
+// Funksjon for å svinge til venstre med en gitt tid
+void svingVenstre(int tid) {
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, LOW);
+  digitalWrite(pinLB, LOW);
+  digitalWrite(pinLF, HIGH);
+  delay(tid * 50);
+}
+
+// Funksjon for å stoppe med en gitt tid
+void stopp(int tid) {
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, HIGH);
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, HIGH);
+  delay(tid * 100);
+}
+
+// Funksjon for å kjøre bakover med en gitt tid
+void kjorBakover(int tid) {
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, LOW);
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, LOW);
+  delay(tid * 300);
+}
+
+// Funksjon for å måle avstand i en bestemt retning
+void maalAvstand() {
+  int tid = 250;
+  delay(200);
+  maalFramover(); // Mål avstand forover
+  if (Fspeedd < 10) // Hvis avstanden er mindre enn 10
+  {
+    stopp(1);
+    kjorBakover(2);
+  }
+  if (Fspeedd < 25) // Hvis avstanden er mindre enn 25
+  {
+    stopp(1);
+    maalVenstre();
+    delay(tid);
+    maalHoyre();
+    delay(tid);
+    if (Lspeedd > Rspeedd) // Hvis venstre avstand er større enn høyre avstand
+    {
+      directionn = Rgo;
+    }
+    if (Lspeedd <= Rspeedd) // Hvis venstre avstand ikke er større enn høyre avstand
+    {
+      directionn = Lgo;
+    }
+    if (Lspeedd < 10 && Rspeedd < 10) // Hvis både venstre og høyre avstand er mindre enn 10
+    {
+      directionn = Bgo;
+    }
+  }
+  else
+  {
+    directionn = Fgo; // Gå framover
+  }
+}
+
+// Funksjon for å måle avstand forover
+void maalFramover() {
+  myservo.write(90);
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  float Fdistance = pulseIn(inputPin, HIGH);
+  Fdistance= Fdistance/5.8/10;
+  Serial.print("F avstand:");
+  Serial.println(Fdistance);
+  Fspeedd = Fdistance;
+}
+
+// Funksjon for å måle avstand til venstre
+void maalVenstre() {
+  myservo.write(150);
+  delay(delay_time);
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  float Ldistance = pulseIn(inputPin, HIGH);
+  Ldistance= Ldistance/5.8/10;
+  Serial.print("L avstand:");
+  Serial.println(Ldistance);
+  Lspeedd = Ldistance;
+}
+
+// Funksjon for å måle avstand til høyre
+void maalHoyre() {
+  myservo.write(20);
+  delay(delay_time);
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  float Rdistance = pulseIn(inputPin, HIGH);
+  Rdistance= Rdistance/5.8/10;
+  Serial.print("R avstand:");
+  Serial.println(Rdistance);
+  Rspeedd = Rdistance;
+}
+
+void loop()
+{
+  myservo.write(90);
+  maalAvstand();
+  if(directionn == 2)
+  {
+    kjorBakover(3);
+    svingVenstre(2);
+    Serial.print(" Revers ");
+  }
+  if(directionn == 6)
+  {
+    kjorBakover(1);
+    svingHoyre(6);
+    Serial.print(" Høyre ");
+  }
+  if(directionn == 4)
+  {
+    kjorBakover(1);
+    svingVenstre(6);
+    Serial.print(" Venstre ");
+  }
+  if(directionn == 8)
+  {
+    kjorFramover(1);
+    Serial.print(" Framover ");
+    Serial.print(" ");
+  }
+}
