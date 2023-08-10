@@ -1,0 +1,65 @@
+// Definer motorpinner
+int enA = 3; // Venstre motor
+int enB = 6; // Høyre motor
+
+int pinLB = 4; // Venstre bakover
+int pinLF = 2; // Venstre framover
+int pinRB = 7; // Høyre bakover
+int pinRF = 5; // Høyre framover
+
+void setup() {
+  // Angi motorpinner som utganger
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(pinLB, OUTPUT);
+  pinMode(pinLF, OUTPUT);
+  pinMode(pinRB, OUTPUT);
+  pinMode(pinRF, OUTPUT);
+}
+
+void loop() {
+  // Gå fremover
+  digitalWrite(pinLB, LOW);
+  digitalWrite(pinLF, HIGH);
+  digitalWrite(pinRB, LOW);
+  digitalWrite(pinRF, HIGH);
+  analogWrite(enA, 255); // Venstre motor full hastighet
+  analogWrite(enB, 255); // Høyre motor full hastighet
+  delay(2000); // Hold i 2 sekunder
+  
+  // Bakover
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, LOW);
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, LOW);
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  delay(2000);
+  
+  // Sving til høyre
+  digitalWrite(pinLB, LOW);
+  digitalWrite(pinLF, HIGH);
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, LOW);
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  delay(1000);
+  
+  // Sving til venstre
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, LOW);
+  digitalWrite(pinRB, LOW);
+  digitalWrite(pinRF, HIGH);
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
+  delay(1000);
+  
+  // Stopp
+  digitalWrite(pinLB, HIGH);
+  digitalWrite(pinLF, HIGH);
+  digitalWrite(pinRB, HIGH);
+  digitalWrite(pinRF, HIGH);
+  analogWrite(enA, 0);
+  analogWrite(enB, 0);
+  delay(1000);
+}
