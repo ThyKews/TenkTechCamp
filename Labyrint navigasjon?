@@ -1,0 +1,130 @@
+#include <Servo.h>
+
+// Definerer pin-numrene for ulike komponenter
+const int enA = 3; // Venstre motor
+const int enB = 6; // Høyre motor
+const int pinLB = 4; // Venstre bakover
+const int pinLF = 2; // Venstre framover
+const int pinRB = 7; // Høyre bakover
+const int pinRF = 5; // Høyre framover
+
+const int inputPin = A0; // Ultrasonisk mottaker (Echo)
+const int outputPin = A1; // Ultrasonisk sender (Trig)
+
+Servo myservo; // Ny servo
+int delay_time = 250; // Stabil tid
+
+// Definerer hastighetsverdier for forskjellige bevegelser
+const int Fgo = 8; // Fremover
+const int Rgo = 6; // Høyre sving
+const int Lgo = 4; // Venstre sving
+const int Bgo = 2; // Bakover
+int directionn = 0; // definerer hvilken retning bilen skal gå
+
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinLB, OUTPUT);
+  pinMode(pinLF, OUTPUT);
+  pinMode(pinRB, OUTPUT);
+  pinMode(pinRF, OUTPUT);
+  pinMode(inputPin, INPUT);
+  pinMode(outputPin, OUTPUT);
+  myservo.attach(10); // Servo-pin (PWM)
+}
+
+// Funksjon for å kontrollere bevegelse med individuelle motorhastigheter
+void move(int leftSpeed, int rightSpeed) {
+  digitalWrite(pinLB, leftSpeed < 0 ? HIGH : LOW);
+  digitalWrite(pinLF, leftSpeed > 0 ? HIGH : LOW);
+  digitalWrite(pinRB, rightSpeed < 0 ? HIGH : LOW);
+  digitalWrite(pinRF, rightSpeed > 0 ? HIGH : LOW);
+  analogWrite(enA, abs(leftSpeed));
+  analogWrite(enB, abs(rightSpeed));
+}
+
+// Funksjon for å stoppe bevegelsen med en gitt forsinkelse
+void stop(int delayTime) {
+  move(0, 0);
+  delay(delayTime);
+}
+
+// Funksjon for å oppdage hinder og bestemme retning
+void detection() {
+  int delay_time = 250;
+  delay(200);
+  float Fdistance = getDistance(90);
+  if (Fdistance < 10) {
+    stop(100);
+    move(-100, -100);
+    delay(300);
+  } else if (Fdistance < 25) {
+    stop(100);
+    float Ldistance = getDistance(150);
+    delay(delay_time);
+    float Rdistance = getDistance(20);
+    delay(delay_time);
+    if (Ldistance > Rdistance) {
+      directionn = Rgo;
+    } else {
+      directionn = Lgo;
+    }
+  } else {
+    directionn = Fgo;
+  }
+}
+
+// Funksjon for å måle avstand i en gitt vinkel
+float getDistance(int angle) {
+  myservo.write(angle);
+  digitalWrite(outputPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(outputPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(outputPin, LOW);
+  float distance = pulseIn(inputPin, HIGH) / 5.8 / 10;
+  Serial.print("Avstand:");
+  Serial.println(distance);
+  return distance;
+}
+
+void loop() {
+  myservo.write(90);
+  detection();
+  switch (directionn) {
+    case 2:
+      stop(100);
+      move(-100, -100);
+      delay(300);
+      move(0, 0);
+      move(-100, 100);
+      delay(200);
+      Serial.print(" Revers ");
+      break;
+    case 6:
+      stop(100);
+      move(-100, -100);
+      delay(100);
+      move(0, 0);
+      move(100, -100);
+      delay(600);
+      Serial.print(" Høyre ");
+      break;
+    case 4:
+      stop(100);
+      move(-100, -100);
+      delay(100);
+      move(0, 0);
+      move(-100, 100);
+      delay(600);
+      Serial.print(" Venstre ");
+      break;
+    case 8:
+      move(100, 100);
+      Serial.print(" Fremover ");
+      break;
+    default:
+      move(0, 0);
+      break;
+  }
+}
